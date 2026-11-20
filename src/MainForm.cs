@@ -12,7 +12,7 @@ namespace Defaults4Me
         readonly ComboBox appBox = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Width = 340 };
         readonly FlowLayoutPanel groupPanel = new FlowLayoutPanel { AutoSize = true, WrapContents = true, Dock = DockStyle.Fill };
         readonly Dictionary<string, CheckBox> groupBoxes = new Dictionary<string, CheckBox>();
-        readonly ListView list = new ListView { View = View.Details, CheckBoxes = true, FullRowSelect = true, Dock = DockStyle.Fill, HideSelection = false };
+        readonly ListView list = new ListView { View = View.Details, CheckBoxes = false, FullRowSelect = true, Dock = DockStyle.Fill, HideSelection = false };
         readonly Button applyBtn = new Button { AutoSize = true }, undoBtn = new Button { AutoSize = true }, settingsBtn = new Button { AutoSize = true }, moreBtn = new Button { AutoSize = true };
         readonly Label status = new Label { AutoSize = true, Dock = DockStyle.Fill, Padding = new Padding(0, 6, 0, 0) };
         readonly ContextMenuStrip more = new ContextMenuStrip();
@@ -54,7 +54,9 @@ namespace Defaults4Me
             list.Columns.Add(Lang.T("col.new"), 220);
             list.Columns.Add(Lang.T("col.status"), 170);
             list.ColumnClick += (s, e) => { sortDesc = sortCol == e.Column && !sortDesc; sortCol = e.Column; Fill(); };
-            list.ItemChecked += (s, e) => { var r = e.Item.Tag as Row; if (r != null) r.Selected = e.Item.Checked; UpdateButtons(); };
+            list.StateImageList = CheckImages();
+            list.MouseClick += (s, e) => { var h = list.HitTest(e.Location); if (h.Item != null && h.Location == ListViewHitTestLocations.StateImage) Toggle(h.Item); };
+            list.KeyDown += (s, e) => { if (e.KeyCode == Keys.Space) { foreach (ListViewItem it in list.SelectedItems) Toggle(it); e.Handled = true; } };
 
             var bottom = new TableLayoutPanel { Dock = DockStyle.Bottom, AutoSize = true, ColumnCount = 5, Padding = new Padding(10, 4, 10, 10) };
             bottom.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
@@ -116,7 +118,7 @@ namespace Defaults4Me
         static string StatusText(Row r)
         {
             if (r.Result != null) return Lang.T("result." + r.Result.ToString().ToLowerInvariant());
-            return r.Selected ? "" : Lang.T("state.same");
+            return r.Already ? Lang.T("state.same") : "";
         }
 
         void Fill()
@@ -127,14 +129,43 @@ namespace Defaults4Me
             list.Items.Clear();
             foreach (var r in ordered)
             {
-                var it = new ListViewItem(new[] { r.Ext, Lang.T("group." + r.Group), r.Now, r.Target, StatusText(r) }) { Tag = r, Checked = r.Selected };
-                if (r.Result == SetResult.Ok) it.ForeColor = Color.ForestGreen;
-                else if (r.Result != null) it.ForeColor = Color.Firebrick;
-                else if (!r.Selected) it.ForeColor = SystemColors.GrayText;
+                var it = new ListViewItem(new[] { r.Ext, Lang.T("group." + r.Group), r.Now, r.Target, StatusText(r) }) { Tag = r, UseItemStyleForSubItems = false };
+                it.StateImageIndex = r.Already && r.Result == null ? 2 : r.Selected ? 1 : 0;
+                Color fore = r.Already && r.Result == null ? SystemColors.GrayText : list.ForeColor;
+                foreach (ListViewItem.ListViewSubItem si in it.SubItems) si.ForeColor = fore;
+                var st = it.SubItems[4];
+                if (r.Result == SetResult.Ok || (r.Already && r.Result == null)) st.ForeColor = Color.ForestGreen;
+                else if (r.Result != null) st.ForeColor = Color.Firebrick;
                 list.Items.Add(it);
             }
             list.EndUpdate();
             UpdateButtons();
+        }
+
+        void Toggle(ListViewItem it)
+        {
+            var r = it.Tag as Row;
+            if (r == null || (r.Already && r.Result == null)) return;
+            r.Selected = !r.Selected;
+            it.StateImageIndex = r.Selected ? 1 : 0;
+            UpdateButtons();
+        }
+
+        ImageList CheckImages()
+        {
+            int sz = (int)Math.Round(16 * DeviceDpi / 96.0);
+            var il = new ImageList { ImageSize = new Size(sz, sz), ColorDepth = ColorDepth.Depth32Bit };
+            foreach (var state in new[] { System.Windows.Forms.VisualStyles.CheckBoxState.UncheckedNormal, System.Windows.Forms.VisualStyles.CheckBoxState.CheckedNormal, System.Windows.Forms.VisualStyles.CheckBoxState.CheckedDisabled })
+            {
+                var bmp = new Bitmap(sz, sz);
+                using (var g = Graphics.FromImage(bmp))
+                {
+                    var glyph = CheckBoxRenderer.GetGlyphSize(g, state);
+                    CheckBoxRenderer.DrawCheckBox(g, new Point((sz - glyph.Width) / 2, (sz - glyph.Height) / 2), state);
+                }
+                il.Images.Add(bmp);
+            }
+            return il;
         }
 
         void UpdateButtons()

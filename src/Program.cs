@@ -8,7 +8,7 @@ namespace Defaults4Me
 {
     static class Program
     {
-        public const string Version = "1.0.0";
+        public const string Version = "1.0.1";
 
         [STAThread]
         static int Main(string[] args)
@@ -42,7 +42,7 @@ namespace Defaults4Me
         {
             foreach (var r in rows)
             {
-                string res = r.Result == null ? (r.Selected ? "" : "  = " + Lang.T("state.same")) : "  -> " + Lang.T("result." + r.Result.ToString().ToLowerInvariant());
+                string res = r.Result == null ? (r.Already ? "  " + Lang.T("state.same") : "") : "  -> " + Lang.T("result." + r.Result.ToString().ToLowerInvariant());
                 Console.WriteLine("  {0,-8} {1,-10} {2,-28} {3}{4}", r.Ext, Lang.T("group." + (r.Group ?? "other")), Trunc(r.Now ?? "", 28), r.Target, res);
             }
         }
@@ -123,7 +123,7 @@ namespace Defaults4Me
                     string problem = Assoc.Problem();
                     if (problem != null) { Console.Error.WriteLine(problem); return 3; }
                     var rows = Engine.ImportProfile(rest[0]);
-                    if (rest.Contains("--all") || rest.Contains("--alle")) rows.ForEach(r => r.Selected = true);
+                    if (rest.Contains("--all") || rest.Contains("--alle")) rows.ForEach(r => { r.Selected = true; r.Already = false; });
                     Engine.Apply(rows, Path.GetFileName(rest[0]));
                     Print(rows);
                     return Summary(rows);

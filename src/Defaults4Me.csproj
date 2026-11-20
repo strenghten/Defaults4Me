@@ -7,7 +7,7 @@
     <RootNamespace>Defaults4Me</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Defaults4Me.ico</ApplicationIcon>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
     <Product>Defaults4Me</Product>
     <Description>Set default apps for whole groups of file types</Description>
     <Copyright>MIT License</Copyright>

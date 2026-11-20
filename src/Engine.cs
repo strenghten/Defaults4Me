@@ -12,7 +12,7 @@ namespace Defaults4Me
     class Row
     {
         public string Ext, Group, Now, Target;
-        public bool Selected = true;
+        public bool Selected = true, Already;
         public SetResult? Result;
     }
 
@@ -23,7 +23,7 @@ namespace Defaults4Me
             return app.Types.OrderBy(t => t.Key)
                 .Select(t => new Row { Ext = t.Key, Target = t.Value, Group = Groups.Of(t.Key) })
                 .Where(r => groups == null || groups.Count == 0 || groups.Contains(r.Group))
-                .Select(r => { r.Now = Apps.Describe(r.Ext, apps); r.Selected = !string.Equals(Native.EffectiveProgId(r.Ext), r.Target, StringComparison.OrdinalIgnoreCase); return r; })
+                .Select(r => { r.Now = Apps.Describe(r.Ext, apps); r.Already = string.Equals(Native.EffectiveProgId(r.Ext), r.Target, StringComparison.OrdinalIgnoreCase); r.Selected = !r.Already; return r; })
                 .ToList();
         }
 
@@ -50,7 +50,7 @@ namespace Defaults4Me
         {
             var rows = Store.ReadPairs(file).Where(p => p.Value.Length > 0)
                 .Select(p => new Row { Ext = p.Key, Target = p.Value, Group = Groups.Of(p.Key) }).ToList();
-            foreach (var r in rows) r.Selected = !string.Equals(Native.EffectiveProgId(r.Ext), r.Target, StringComparison.OrdinalIgnoreCase);
+            foreach (var r in rows) { r.Already = string.Equals(Native.EffectiveProgId(r.Ext), r.Target, StringComparison.OrdinalIgnoreCase); r.Selected = !r.Already; }
             return rows;
         }
 

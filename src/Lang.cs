@@ -28,7 +28,7 @@ namespace Defaults4Me
             { "result.blocked", new[] { "von Windows gesperrt", "blocked by Windows" } },
             { "result.rejected", new[] { "von Windows abgelehnt", "rejected by Windows" } },
             { "result.failed", new[] { "Fehler", "error" } },
-            { "state.same", new[] { "schon so", "already set" } },
+            { "state.same", new[] { "✓ Standard", "✓ Default" } },
 
             { "problem.scheme", new[] { "Windows nutzt ein neueres Schutzverfahren, das Defaults4Me noch nicht kennt. Bitte nach einer neuen Version schauen – bis dahin über die Windows-Einstellungen umstellen.", "Windows uses a newer protection scheme that Defaults4Me does not know yet. Please look for a new version – until then use Windows Settings." } },
             { "problem.salt", new[] { "Die nötigen Windows-Daten für die Prüfsumme wurden nicht gefunden. Bitte über die Windows-Einstellungen umstellen.", "The Windows data needed for the hash was not found. Please use Windows Settings." } },
